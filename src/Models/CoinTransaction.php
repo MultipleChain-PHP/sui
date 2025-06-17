@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace MultipleChain\Sui\Models;
 
+use MultipleChain\Sui\Utils;
 use MultipleChain\Utils\Number;
 use MultipleChain\Enums\AssetDirection;
 use MultipleChain\Enums\TransactionStatus;
@@ -17,7 +18,12 @@ class CoinTransaction extends Transaction implements CoinTransactionInterface
      */
     public function getReceiver(): string
     {
-        return '0x';
+        $data = $this->getData();
+        if (!$data) {
+            return '';
+        }
+        $ixs = $this->getInputs('pure', 'address');
+        return $ixs ? $ixs[0]->value : '';
     }
 
     /**
@@ -25,7 +31,7 @@ class CoinTransaction extends Transaction implements CoinTransactionInterface
      */
     public function getSender(): string
     {
-        return '0x';
+        return $this->getSigner();
     }
 
     /**
@@ -33,7 +39,9 @@ class CoinTransaction extends Transaction implements CoinTransactionInterface
      */
     public function getAmount(): Number
     {
-        return new Number('0', (new Coin())->getDecimals());
+        $ixs = $this->getInputs('pure', 'u64');
+        $value = (int) ($ixs ? $ixs[0]->value : 0);
+        return new Number(Utils::fromMist($value), (new Coin())->getDecimals());
     }
 
     /**
@@ -44,6 +52,26 @@ class CoinTransaction extends Transaction implements CoinTransactionInterface
      */
     public function verifyTransfer(AssetDirection $direction, string $address, float $amount): TransactionStatus
     {
-        return TransactionStatus::PENDING;
+        $status = $this->getStatus();
+
+        if (TransactionStatus::PENDING === $status) {
+            return TransactionStatus::PENDING;
+        }
+
+        if ($this->getAmount()->toFloat() !== $amount) {
+            return TransactionStatus::FAILED;
+        }
+
+        if (AssetDirection::INCOMING === $direction) {
+            if (strtolower($this->getReceiver()) !== strtolower($address)) {
+                return TransactionStatus::FAILED;
+            }
+        } else {
+            if (strtolower($this->getSender()) !== strtolower($address)) {
+                return TransactionStatus::FAILED;
+            }
+        }
+
+        return TransactionStatus::CONFIRMED;
     }
 }

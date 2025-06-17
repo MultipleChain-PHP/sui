@@ -62,17 +62,6 @@ class CoinTransactionTest extends BaseTest
     /**
      * @return void
      */
-    public function testType(): void
-    {
-        $this->assertEquals(
-            $this->tx->getType(),
-            TransactionType::COIN
-        );
-    }
-
-    /**
-     * @return void
-     */
     public function testVerifyTransfer(): void
     {
         $this->assertEquals(

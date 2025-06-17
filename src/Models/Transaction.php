@@ -6,6 +6,7 @@ namespace MultipleChain\Sui\Models;
 
 use MultipleChain\Sui\Utils;
 use MultipleChain\Utils\Math;
+use Sui\Type\SuiCallArg;
 use Sui\Type\TransactionBlock;
 use Sui\Type\TransactionKind;
 use MultipleChain\Utils\Number;
@@ -217,18 +218,18 @@ class Transaction implements TransactionInterface
     /**
      * @param string $type
      * @param string|null $vType
-     * @return array<mixed>|null
+     * @return array<SuiCallArg>|null
      */
     protected function getInputs(string $type, ?string $vType = null): ?array
     {
         $tx = $this->getTransaction();
         if ($tx) {
-            return array_filter($tx->inputs ?? [], function ($input) use ($type, $vType) {
+            return array_values(array_filter($tx->inputs ?? [], function ($input) use ($type, $vType) {
                 if ($vType && 'pure' === $input->type) {
                     return $input->valueType === $vType;
                 }
                 return $input->type === $type;
-            });
+            }));
         }
         return null;
     }
