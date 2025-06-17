@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "26fbb5e9e936f1d81aa3c5a04c18bb7c",
+    "content-hash": "22a637f8e9825868743d8da9bd411b75",
     "packages": [
         {
             "name": "bitwasp/bech32",
@@ -1013,16 +1013,16 @@
         },
         {
             "name": "sui-php/sdk",
-            "version": "0.1.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/MultipleChain-PHP/sui-php.git",
-                "reference": "1895b4d940dcae0609c45b74bd49086f9503370d"
+                "reference": "67aeb555c638ce27d455cf8195ac001c6eafd104"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/MultipleChain-PHP/sui-php/zipball/1895b4d940dcae0609c45b74bd49086f9503370d",
-                "reference": "1895b4d940dcae0609c45b74bd49086f9503370d",
+                "url": "https://api.github.com/repos/MultipleChain-PHP/sui-php/zipball/67aeb555c638ce27d455cf8195ac001c6eafd104",
+                "reference": "67aeb555c638ce27d455cf8195ac001c6eafd104",
                 "shasum": ""
             },
             "require": {
@@ -1057,9 +1057,9 @@
             "description": "SUI PHP SDK",
             "support": {
                 "issues": "https://github.com/MultipleChain-PHP/sui-php/issues",
-                "source": "https://github.com/MultipleChain-PHP/sui-php/tree/0.1.0"
+                "source": "https://github.com/MultipleChain-PHP/sui-php/tree/0.1.1"
             },
-            "time": "2025-06-16T11:07:01+00:00"
+            "time": "2025-06-17T12:42:45+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
