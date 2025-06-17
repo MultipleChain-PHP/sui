@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace MultipleChain\Sui\Assets;
 
+use Sui\Transactions\Transaction;
+use Sui\Transactions\BuildTransactionOptions;
+use MultipleChain\Sui\Utils;
 use MultipleChain\Utils\Number;
 use MultipleChain\Enums\ErrorType;
 use MultipleChain\Sui\Provider;
@@ -31,7 +34,7 @@ class Coin implements CoinInterface
      */
     public function getName(): string
     {
-        return 'Coin';
+        return 'Sui';
     }
 
     /**
@@ -39,7 +42,7 @@ class Coin implements CoinInterface
      */
     public function getSymbol(): string
     {
-        return 'COIN';
+        return 'SUI';
     }
 
     /**
@@ -47,7 +50,7 @@ class Coin implements CoinInterface
      */
     public function getDecimals(): int
     {
-        return 18;
+        return 9;
     }
 
     /**
@@ -56,8 +59,8 @@ class Coin implements CoinInterface
      */
     public function getBalance(string $owner): Number
     {
-        $this->provider->isTestnet(); // just for phpstan
-        return new Number(0, $this->getDecimals());
+        $balance = $this->provider->client->getBalance($owner);
+        return new Number(Utils::fromMist((int) $balance->totalBalance), $this->getDecimals());
     }
 
     /**
@@ -68,6 +71,20 @@ class Coin implements CoinInterface
      */
     public function transfer(string $sender, string $receiver, float $amount): TransactionSigner
     {
-        return new TransactionSigner('example');
+        if ($amount < 0) {
+            throw new \RuntimeException(ErrorType::INVALID_AMOUNT->value);
+        }
+
+        if ($amount > $this->getBalance($sender)->toFloat()) {
+            throw new \RuntimeException(ErrorType::INSUFFICIENT_BALANCE->value);
+        }
+
+        $transaction = new Transaction(new BuildTransactionOptions($this->provider->client));
+
+        $coin = $transaction->splitCoins($transaction->gas(), [Utils::toMist($amount)]);
+
+        $transaction->transferObjects([$coin], $receiver);
+
+        return new TransactionSigner($transaction);
     }
 }

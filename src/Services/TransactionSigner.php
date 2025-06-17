@@ -5,20 +5,22 @@ declare(strict_types=1);
 namespace MultipleChain\Sui\Services;
 
 use MultipleChain\Sui\Provider;
+use Sui\Transactions\Transaction;
+use Sui\Keypairs\Ed25519\Keypair;
 use MultipleChain\Interfaces\ProviderInterface;
 use MultipleChain\Interfaces\Services\TransactionSignerInterface;
 
 class TransactionSigner implements TransactionSignerInterface
 {
     /**
-     * @var mixed
+     * @var Transaction
      */
-    private mixed $rawData;
+    private Transaction $rawData;
 
     /**
-     * @var mixed
+     * @var array<mixed>
      */
-    private mixed $signedData;
+    private array $signedData;
 
     /**
      * @var Provider
@@ -42,9 +44,9 @@ class TransactionSigner implements TransactionSignerInterface
      */
     public function sign(string $privateKey): TransactionSignerInterface
     {
-        // example implementation
-        $this->provider->isTestnet(); // just for phpstan
-        $this->signedData = 'signedData';
+        $keypair = Keypair::fromSecretKey($privateKey);
+        $this->rawData->setSenderIfNotSet($keypair->toSuiAddress());
+        $this->signedData = $keypair->signTransaction($this->rawData->build());
         return $this;
     }
 
@@ -53,12 +55,16 @@ class TransactionSigner implements TransactionSignerInterface
      */
     public function send(): string
     {
-        // example implementation
-        return 'transactionId';
+        $result = $this->provider->client->executeTransactionBlock(
+            $this->signedData['bytes'],
+            $this->signedData['signature']
+        );
+
+        return $result->digest;
     }
 
     /**
-     * @return mixed
+     * @return Transaction
      */
     public function getRawData(): mixed
     {
@@ -66,7 +72,7 @@ class TransactionSigner implements TransactionSignerInterface
     }
 
     /**
-     * @return mixed
+     * @return array<mixed>
      */
     public function getSignedData(): mixed
     {
