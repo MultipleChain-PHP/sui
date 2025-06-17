@@ -36,6 +36,11 @@ class Transaction implements TransactionInterface
     private Provider $provider;
 
     /**
+     * @var int
+     */
+    private int $counter = 0;
+
+    /**
      * @param string $id
      * @param Provider|null $provider
      */
@@ -78,8 +83,31 @@ class Transaction implements TransactionInterface
 
             return $this->data = $response;
         } catch (\Throwable $th) {
+            if ($this->checkNewTransactionNotFoundPossibleError($th->getMessage())) {
+                return $this->getData();
+            }
+            \var_dump($th->getMessage());
             throw new \RuntimeException(ErrorType::RPC_REQUEST_ERROR->value);
         }
+    }
+
+
+    /**
+     * @param string $message
+     * @throws \RuntimeException
+     * @return bool
+     */
+    private function checkNewTransactionNotFoundPossibleError(string $message): bool
+    {
+        if (false !== strpos($message, 'Could not find the referenced transaction')) {
+            if ($this->counter > 5) {
+                throw new \RuntimeException(ErrorType::TRANSACTION_NOT_FOUND->value);
+            }
+            sleep(2);
+            $this->counter++;
+            return true;
+        }
+        return false;
     }
 
     /**
