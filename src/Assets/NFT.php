@@ -21,20 +21,20 @@ class NFT extends Contract implements NftInterface
     /**
      * Get metadata for the NFT.
      * @param string|null $address
-     * @return array<mixed>
+     * @return array<mixed>|null
      */
-    public function getMetadata(?string $address = null): array
+    public function getMetadata(?string $address = null): ?array
     {
         $res = $this->provider->client->getObject($address ?? $this->getAddress(), [
             'showContent' => true,
             'showOwner' => true
         ]);
 
-        if ('moveObject' == $res->content->dataType) {
-            $fields = $res->content->fields;
+        if ('moveObject' == $res->content?->dataType) {
+            $fields = $res->content?->fields ?? [];
             $this->metadata = [
-                'owner' => $res->owner->value,
                 'name' => $fields['name'] ?? '',
+                'owner' => $res->owner?->value ?? '',
                 'symbol' => $fields['symbol'] ?? $fields['name'] ?? '',
                 'description' => $fields['description'] ?? $fields['name'] ?? '',
                 'image' => $fields['image'] ?? $fields['url'] ?? $fields['image_url'] ?? null,

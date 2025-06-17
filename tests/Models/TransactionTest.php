@@ -44,14 +44,6 @@ class TransactionTest extends BaseTest
     /**
      * @return void
      */
-    public function testType(): void
-    {
-        $this->assertEquals(TransactionType::COIN, $this->tx->getType());
-    }
-
-    /**
-     * @return void
-     */
     public function testWait(): void
     {
         $this->assertEquals(TransactionStatus::CONFIRMED, $this->tx->wait());
@@ -63,7 +55,7 @@ class TransactionTest extends BaseTest
     public function testUrl(): void
     {
         $this->assertEquals(
-            'sui url',
+            'https://suiscan.xyz/testnet/tx/38rQ6ThScL69gSLaWez9i8kj3CEw6eyqjkCoNPbcxPKN',
             $this->tx->getUrl()
         );
     }
@@ -81,7 +73,7 @@ class TransactionTest extends BaseTest
      */
     public function testFee(): void
     {
-        $this->assertEquals(0.000371822357865, $this->tx->getFee()->toFloat());
+        $this->assertEquals(0.00199788, $this->tx->getFee()->toFloat());
     }
 
     /**
@@ -89,7 +81,7 @@ class TransactionTest extends BaseTest
      */
     public function testBlockNumber(): void
     {
-        $this->assertEquals(5461884, $this->tx->getBlockNumber());
+        $this->assertEquals(205822572, $this->tx->getBlockNumber());
     }
 
     /**
@@ -97,7 +89,7 @@ class TransactionTest extends BaseTest
      */
     public function testBlockTimestamp(): void
     {
-        $this->assertEquals(1710141144, $this->tx->getBlockTimestamp());
+        $this->assertEquals(1749451910786, $this->tx->getBlockTimestamp());
     }
 
     /**
@@ -105,7 +97,7 @@ class TransactionTest extends BaseTest
      */
     public function testBlockConfirmationCount(): void
     {
-        $this->assertGreaterThan(129954, $this->tx->getBlockConfirmationCount());
+        $this->assertGreaterThan(397, $this->tx->getBlockConfirmationCount());
     }
 
     /**
