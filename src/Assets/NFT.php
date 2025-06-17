@@ -6,25 +6,62 @@ namespace MultipleChain\Sui\Assets;
 
 use MultipleChain\Utils\Number;
 use MultipleChain\Enums\ErrorType;
+use Sui\Transactions\Transaction;
+use Sui\Transactions\BuildTransactionOptions;
 use MultipleChain\Interfaces\Assets\NftInterface;
 use MultipleChain\Sui\Services\TransactionSigner;
 
 class NFT extends Contract implements NftInterface
 {
     /**
-     * @return string
+     * @var array<mixed>|null
      */
-    public function getName(): string
+    private ?array $metadata = null;
+
+    /**
+     * Get metadata for the NFT.
+     * @param string|null $address
+     * @return array<mixed>
+     */
+    public function getMetadata(?string $address = null): array
     {
-        return 'NFT';
+        $res = $this->provider->client->getObject($address ?? $this->getAddress(), [
+            'showContent' => true,
+            'showOwner' => true
+        ]);
+
+        if ('moveObject' == $res->content->dataType) {
+            $fields = $res->content->fields;
+            $this->metadata = [
+                'owner' => $res->owner->value,
+                'name' => $fields['name'] ?? '',
+                'symbol' => $fields['symbol'] ?? $fields['name'] ?? '',
+                'description' => $fields['description'] ?? $fields['name'] ?? '',
+                'image' => $fields['image'] ?? $fields['url'] ?? $fields['image_url'] ?? null,
+            ];
+        }
+
+        return $this->metadata;
     }
 
     /**
+     * @param string|null $address
      * @return string
      */
-    public function getSymbol(): string
+    public function getName(?string $address = null): string
     {
-        return 'NFT';
+        $this->getMetadata($address);
+        return $this->metadata['name'] ?? '';
+    }
+
+    /**
+     * @param string|null $address
+     * @return string
+     */
+    public function getSymbol(?string $address = null): string
+    {
+        $this->getMetadata($address);
+        return $this->metadata['symbol'] ?? '';
     }
 
     /**
@@ -33,7 +70,16 @@ class NFT extends Contract implements NftInterface
      */
     public function getBalance(string $owner): Number
     {
-        return new Number('0', 0);
+        $res = $this->provider->client->getOwnedObjects(
+            $owner,
+            [
+                'StructType' => $this->getAddress()
+            ],
+            [],
+            null,
+            50
+        );
+        return new Number(count($res->data), 0);
     }
 
     /**
@@ -42,7 +88,8 @@ class NFT extends Contract implements NftInterface
      */
     public function getOwner(int|string $tokenId): string
     {
-        return '0x';
+        $this->getMetadata((string) $tokenId);
+        return $this->metadata['owner'] ?? '';
     }
 
     /**
@@ -51,7 +98,8 @@ class NFT extends Contract implements NftInterface
      */
     public function getTokenURI(int|string $tokenId): string
     {
-        return 'https://example.com';
+        $this->getMetadata((string) $tokenId);
+        return $this->metadata['image'] ?? '';
     }
 
     /**
@@ -60,7 +108,7 @@ class NFT extends Contract implements NftInterface
      */
     public function getApproved(int|string $tokenId): ?string
     {
-        return '0x';
+        throw new \Exception('Method not implemented.');
     }
 
     /**
@@ -71,7 +119,21 @@ class NFT extends Contract implements NftInterface
      */
     public function transfer(string $sender, string $receiver, int|string $tokenId): TransactionSigner
     {
-        return new TransactionSigner('example');
+        if ($this->getBalance($sender)->toFloat() <= 0) {
+            throw new \RuntimeException(ErrorType::INSUFFICIENT_BALANCE->value);
+        }
+
+        $originalOwner = $this->getOwner($tokenId);
+
+        if (strtolower($originalOwner) !== strtolower($sender)) {
+            throw new \RuntimeException(ErrorType::UNAUTHORIZED_ADDRESS->value);
+        }
+
+        $transaction = new Transaction(new BuildTransactionOptions($this->provider->client));
+
+        $transaction->transferObjects([$transaction->object($tokenId)], $receiver);
+
+        return new TransactionSigner($transaction);
     }
 
     /**
@@ -87,7 +149,7 @@ class NFT extends Contract implements NftInterface
         string $receiver,
         int|string $tokenId
     ): TransactionSigner {
-        return new TransactionSigner('example');
+        throw new \Exception('Method not implemented.');
     }
 
     /**
@@ -98,6 +160,6 @@ class NFT extends Contract implements NftInterface
      */
     public function approve(string $owner, string $spender, int|string $tokenId): TransactionSigner
     {
-        return new TransactionSigner('example');
+        throw new \Exception('Method not implemented.');
     }
 }
