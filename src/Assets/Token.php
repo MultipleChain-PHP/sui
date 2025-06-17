@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace MultipleChain\Sui\Assets;
 
+use Sui\Type\CoinStruct;
+use Sui\Type\CoinMetadata;
+use Sui\Transactions\Transaction;
+use Sui\Transactions\BuildTransactionOptions;
 use MultipleChain\Utils\Number;
 use MultipleChain\Enums\ErrorType;
 use MultipleChain\Interfaces\Assets\TokenInterface;
@@ -12,11 +16,27 @@ use MultipleChain\Sui\Services\TransactionSigner;
 class Token extends Contract implements TokenInterface
 {
     /**
+     * @var null|CoinMetadata
+     */
+    private ?CoinMetadata $metadata = null;
+
+    /**
+     * @return CoinMetadata|null $metadata
+     */
+    public function getMetadata(): ?CoinMetadata
+    {
+        if ($this->metadata) {
+            return $this->metadata;
+        }
+        return $this->metadata = $this->provider->client->getCoinMetadata($this->getAddress());
+    }
+
+    /**
      * @return string
      */
     public function getName(): string
     {
-        return 'Token';
+        return $this->getMetadata()?->name ?? '';
     }
 
     /**
@@ -24,7 +44,7 @@ class Token extends Contract implements TokenInterface
      */
     public function getSymbol(): string
     {
-        return 'TOKEN';
+        return $this->getMetadata()?->symbol ?? '';
     }
 
     /**
@@ -32,7 +52,25 @@ class Token extends Contract implements TokenInterface
      */
     public function getDecimals(): int
     {
-        return 18;
+        return $this->getMetadata()?->decimals ?? 0;
+    }
+
+    /**
+     * @param float $amount
+     * @return int
+     */
+    private function toMist(float $amount): int
+    {
+        return (int) ($amount * (10 ** $this->getDecimals()));
+    }
+
+    /**
+     * @param int $amount
+     * @return float
+     */
+    private function fromMist(int $amount): float
+    {
+        return $amount / (10 ** $this->getDecimals());
     }
 
     /**
@@ -41,7 +79,8 @@ class Token extends Contract implements TokenInterface
      */
     public function getBalance(string $owner): Number
     {
-        return new Number('0', $this->getDecimals());
+        $balance = $this->provider->client->getBalance($owner, $this->getAddress());
+        return new Number($this->fromMist((int) $balance->totalBalance), $this->getDecimals());
     }
 
     /**
@@ -49,7 +88,8 @@ class Token extends Contract implements TokenInterface
      */
     public function getTotalSupply(): Number
     {
-        return new Number('0', $this->getDecimals());
+        $supply = $this->provider->client->getTotalSupply($this->getAddress());
+        return new Number($this->fromMist((int) $supply), $this->getDecimals());
     }
 
     /**
@@ -59,7 +99,7 @@ class Token extends Contract implements TokenInterface
      */
     public function getAllowance(string $owner, string $spender): Number
     {
-        return new Number('0', $this->getDecimals());
+        throw new \Exception('Method not implemented.');
     }
 
     /**
@@ -70,7 +110,40 @@ class Token extends Contract implements TokenInterface
      */
     public function transfer(string $sender, string $receiver, float $amount): TransactionSigner
     {
-        return new TransactionSigner('example');
+        if ($amount < 0) {
+            throw new \RuntimeException(ErrorType::INVALID_AMOUNT->value);
+        }
+
+        if ($amount > $this->getBalance($sender)->toFloat()) {
+            throw new \RuntimeException(ErrorType::INSUFFICIENT_BALANCE->value);
+        }
+
+        $amount = $this->toMist($amount);
+
+        $coins = $this->provider->client->getCoins($sender, $this->getAddress());
+        $transaction = new Transaction(new BuildTransactionOptions($this->provider->client));
+        $enoughBalance = array_filter($coins->data, fn(CoinStruct $coin) => $coin->balance >= $amount);
+
+        if (count($enoughBalance) > 0) {
+            $transaction->transferObjects(
+                [$transaction->splitCoins($transaction->object($enoughBalance[0]->coinObjectId), [$amount])],
+                $receiver
+            );
+        } else {
+            $coinObjectIds = array_map(fn(CoinStruct $coin) => $coin->coinObjectId, $coins->data);
+            $primaryCoin = $transaction->object($coinObjectIds[0]);
+
+            if (count($coinObjectIds) > 1) {
+                $transaction->mergeCoins(
+                    $primaryCoin,
+                    array_map(fn(string $id) => $transaction->object($id), array_slice($coinObjectIds, 1))
+                );
+            }
+
+            $transaction->transferObjects([$transaction->splitCoins($primaryCoin, [$amount])], $receiver);
+        }
+
+        return new TransactionSigner($transaction);
     }
 
     /**
@@ -86,7 +159,7 @@ class Token extends Contract implements TokenInterface
         string $receiver,
         float $amount
     ): TransactionSigner {
-        return new TransactionSigner('example');
+        throw new \Exception('Method not implemented.');
     }
 
     /**
@@ -97,6 +170,6 @@ class Token extends Contract implements TokenInterface
      */
     public function approve(string $owner, string $spender, float $amount): TransactionSigner
     {
-        return new TransactionSigner('example');
+        throw new \Exception('Method not implemented.');
     }
 }

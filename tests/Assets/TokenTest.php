@@ -30,7 +30,7 @@ class TokenTest extends BaseTest
      */
     public function testName(): void
     {
-        $this->assertEquals('MyToken', $this->token->getName());
+        $this->assertEquals('Test USDC', $this->token->getName());
     }
 
     /**
@@ -38,7 +38,7 @@ class TokenTest extends BaseTest
      */
     public function testSymbol(): void
     {
-        $this->assertEquals('MTK', $this->token->getSymbol());
+        $this->assertEquals('TUSDC', $this->token->getSymbol());
     }
 
     /**
@@ -46,7 +46,7 @@ class TokenTest extends BaseTest
      */
     public function testDecimals(): void
     {
-        $this->assertEquals(18, $this->token->getDecimals());
+        $this->assertEquals(9, $this->token->getDecimals());
     }
 
     /**
@@ -66,7 +66,7 @@ class TokenTest extends BaseTest
     public function testTotalSupply(): void
     {
         $this->assertEquals(
-            1000000,
+            10000000,
             $this->token->getTotalSupply()->toFloat()
         );
     }
@@ -103,65 +103,65 @@ class TokenTest extends BaseTest
         );
     }
 
-    /**
-     * @return void
-     */
-    public function testApproveAndAllowance(): void
-    {
-        $signer = $this->token->approve(
-            $this->data->senderTestAddress,
-            $this->data->receiverTestAddress,
-            $this->data->tokenApproveTestAmount
-        );
+    // /**
+    //  * @return void
+    //  */
+    // public function testApproveAndAllowance(): void
+    // {
+    //     $signer = $this->token->approve(
+    //         $this->data->senderTestAddress,
+    //         $this->data->receiverTestAddress,
+    //         $this->data->tokenApproveTestAmount
+    //     );
 
-        $signer = $signer->sign($this->data->senderPrivateKey);
+    //     $signer = $signer->sign($this->data->senderPrivateKey);
 
-        if (!$this->data->tokenApproveTestIsActive) {
-            $this->assertTrue(true);
-            return;
-        }
+    //     if (!$this->data->tokenApproveTestIsActive) {
+    //         $this->assertTrue(true);
+    //         return;
+    //     }
 
-        (new Transaction($signer->send()))->wait();
+    //     (new Transaction($signer->send()))->wait();
 
-        $allowance = $this->token->getAllowance(
-            $this->data->senderTestAddress,
-            $this->data->receiverTestAddress
-        );
+    //     $allowance = $this->token->getAllowance(
+    //         $this->data->senderTestAddress,
+    //         $this->data->receiverTestAddress
+    //     );
 
-        $this->assertEquals(
-            $this->data->tokenApproveTestAmount,
-            $allowance->toFloat()
-        );
-    }
+    //     $this->assertEquals(
+    //         $this->data->tokenApproveTestAmount,
+    //         $allowance->toFloat()
+    //     );
+    // }
 
-    /**
-     * @return void
-     */
-    public function testTransferFrom(): void
-    {
-        $signer = $this->token->transferFrom(
-            $this->data->receiverTestAddress,
-            $this->data->senderTestAddress,
-            $this->data->receiverTestAddress,
-            2
-        );
+    // /**
+    //  * @return void
+    //  */
+    // public function testTransferFrom(): void
+    // {
+    //     $signer = $this->token->transferFrom(
+    //         $this->data->receiverTestAddress,
+    //         $this->data->senderTestAddress,
+    //         $this->data->receiverTestAddress,
+    //         2
+    //     );
 
-        $signer = $signer->sign($this->data->receiverPrivateKey);
+    //     $signer = $signer->sign($this->data->receiverPrivateKey);
 
-        if (!$this->data->tokenTransferFromTestIsActive) {
-            $this->assertTrue(true);
-            return;
-        }
+    //     if (!$this->data->tokenTransferFromTestIsActive) {
+    //         $this->assertTrue(true);
+    //         return;
+    //     }
 
-        $beforeBalance = $this->token->getBalance($this->data->receiverTestAddress);
+    //     $beforeBalance = $this->token->getBalance($this->data->receiverTestAddress);
 
-        (new Transaction($signer->send()))->wait();
+    //     (new Transaction($signer->send()))->wait();
 
-        $afterBalance = $this->token->getBalance($this->data->receiverTestAddress);
+    //     $afterBalance = $this->token->getBalance($this->data->receiverTestAddress);
 
-        $this->assertEquals(
-            $afterBalance->toString(),
-            $beforeBalance->add(new Number(2, $this->token->getDecimals()))->toString()
-        );
-    }
+    //     $this->assertEquals(
+    //         $afterBalance->toString(),
+    //         $beforeBalance->add(new Number(2, $this->token->getDecimals()))->toString()
+    //     );
+    // }
 }

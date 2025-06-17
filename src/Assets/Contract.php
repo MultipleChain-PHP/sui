@@ -23,7 +23,7 @@ class Contract implements ContractInterface
     /**
      * @var Provider
      */
-    private Provider $provider;
+    protected Provider $provider;
 
     /**
      * @param string $address
@@ -50,8 +50,7 @@ class Contract implements ContractInterface
      */
     public function callMethod(string $method, mixed ...$args): mixed
     {
-        $this->provider->isTestnet(); // just for phpstan
-        return 'example';
+        throw new \Exception('Method not implemented.');
     }
 
     /**
@@ -75,7 +74,7 @@ class Contract implements ContractInterface
      */
     public function getMethodData(string $method, mixed ...$args): mixed
     {
-        return 'example';
+        throw new \Exception('Method not implemented.');
     }
 
     /**
@@ -86,6 +85,6 @@ class Contract implements ContractInterface
      */
     public function createTransactionData(string $method, string $from, mixed ...$args): mixed
     {
-        return 'example';
+        throw new \Exception('Method not implemented.');
     }
 }

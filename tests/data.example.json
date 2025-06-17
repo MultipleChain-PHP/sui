@@ -1,5 +1,5 @@
 {
-    "rpcUrl": "",
+    "rpcUrl": "https://fullnode.testnet.sui.io:443",
     "coinTransferTestIsActive": false,
     "tokenTransferTestIsActive": false,
     "tokenApproveTestIsActive": false,
