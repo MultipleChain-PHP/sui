@@ -41,7 +41,7 @@ class NftTransaction extends ContractTransaction implements NftTransactionInterf
             return '';
         }
         $ixs = $this->getInputs('object', 'immOrOwnedObject');
-        return $ixs ? $ixs[0]->objectId : '';
+        return $ixs ? ($ixs[0]->objectId ?? '') : '';
     }
 
     /**

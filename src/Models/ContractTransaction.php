@@ -19,11 +19,11 @@ class ContractTransaction extends Transaction implements ContractTransactionInte
             return '';
         }
         foreach (($data->objectChanges ?? []) as $change) {
-            if ('published' === $change->type || str_contains($change->objectType, Constants::SUI_TYPE_ARG)) {
+            if ('published' === $change->type || str_contains($change->objectType ?? '', Constants::SUI_TYPE_ARG)) {
                 continue;
             }
-            preg_match('/0x2::coin::Coin<(.+)>/', $change->objectType, $matches);
-            return isset($matches[1]) ? $matches[1] : $change->objectType;
+            preg_match('/0x2::coin::Coin<(.+)>/', $change->objectType ?? '', $matches);
+            return isset($matches[1]) ? $matches[1] : ($change->objectType ?? '');
         }
 
         return '';
