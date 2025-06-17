@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace MultipleChain\Sui\Tests\Models;
 
-use MultipleChain\Enums\TransactionType;
 use MultipleChain\Enums\TransactionStatus;
 use MultipleChain\Sui\Tests\BaseTest;
 use MultipleChain\Sui\Models\Transaction;

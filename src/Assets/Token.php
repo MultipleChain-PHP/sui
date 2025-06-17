@@ -21,9 +21,9 @@ class Token extends Contract implements TokenInterface
     private ?CoinMetadata $metadata = null;
 
     /**
-     * @return CoinMetadata|null $metadata
+     * @return CoinMetadata $metadata
      */
-    public function getMetadata(): ?CoinMetadata
+    public function getMetadata(): CoinMetadata
     {
         if ($this->metadata) {
             return $this->metadata;
@@ -36,7 +36,7 @@ class Token extends Contract implements TokenInterface
      */
     public function getName(): string
     {
-        return $this->getMetadata()?->name ?? '';
+        return $this->getMetadata()->name;
     }
 
     /**
@@ -44,7 +44,7 @@ class Token extends Contract implements TokenInterface
      */
     public function getSymbol(): string
     {
-        return $this->getMetadata()?->symbol ?? '';
+        return $this->getMetadata()->symbol;
     }
 
     /**
@@ -52,7 +52,7 @@ class Token extends Contract implements TokenInterface
      */
     public function getDecimals(): int
     {
-        return $this->getMetadata()?->decimals ?? 0;
+        return $this->getMetadata()->decimals;
     }
 
     /**

@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace MultipleChain\Sui\Models;
 
+use MultipleChain\Utils\Math;
 use MultipleChain\Utils\Number;
+use MultipleChain\Sui\Assets\Token;
 use MultipleChain\Enums\AssetDirection;
 use MultipleChain\Enums\TransactionStatus;
-use MultipleChain\Sui\Assets\Token;
 use MultipleChain\Interfaces\Models\TokenTransactionInterface;
 
 class TokenTransaction extends ContractTransaction implements TokenTransactionInterface
@@ -17,7 +18,12 @@ class TokenTransaction extends ContractTransaction implements TokenTransactionIn
      */
     public function getReceiver(): string
     {
-        return '0x';
+        $data = $this->getData();
+        if (!$data) {
+            return '';
+        }
+        $ixs = $this->getInputs('pure', 'address');
+        return $ixs ? $ixs[0]->value : '';
     }
 
     /**
@@ -25,7 +31,7 @@ class TokenTransaction extends ContractTransaction implements TokenTransactionIn
      */
     public function getSender(): string
     {
-        return '0x';
+        return $this->getSigner();
     }
 
     /**
@@ -33,7 +39,12 @@ class TokenTransaction extends ContractTransaction implements TokenTransactionIn
      */
     public function getAmount(): Number
     {
-        return new Number('0', (new Token($this->getAddress()))->getDecimals());
+        $address = $this->getAddress();
+        $ixs = $this->getInputs('pure', 'u64');
+        $value = (int) ($ixs ? $ixs[0]->value : 0);
+        $decimals = (new Token($address))->getDecimals();
+        $amount = Math::div($value, Math::pow(10, $decimals), $decimals);
+        return new Number($amount, $decimals);
     }
 
     /**
@@ -44,6 +55,26 @@ class TokenTransaction extends ContractTransaction implements TokenTransactionIn
      */
     public function verifyTransfer(AssetDirection $direction, string $address, float $amount): TransactionStatus
     {
-        return TransactionStatus::PENDING;
+        $status = $this->getStatus();
+
+        if (TransactionStatus::PENDING === $status) {
+            return TransactionStatus::PENDING;
+        }
+
+        if ($this->getAmount()->toFloat() !== $amount) {
+            return TransactionStatus::FAILED;
+        }
+
+        if (AssetDirection::INCOMING === $direction) {
+            if (strtolower($this->getReceiver()) !== strtolower($address)) {
+                return TransactionStatus::FAILED;
+            }
+        } else {
+            if (strtolower($this->getSender()) !== strtolower($address)) {
+                return TransactionStatus::FAILED;
+            }
+        }
+
+        return TransactionStatus::CONFIRMED;
     }
 }

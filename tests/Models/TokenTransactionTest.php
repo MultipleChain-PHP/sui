@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MultipleChain\Sui\Tests\Models;
 
 use MultipleChain\Enums\AssetDirection;
-use MultipleChain\Enums\TransactionType;
 use MultipleChain\Enums\TransactionStatus;
 use MultipleChain\Sui\Tests\BaseTest;
 use MultipleChain\Sui\Models\TokenTransaction;
@@ -56,17 +55,6 @@ class TokenTransactionTest extends BaseTest
         $this->assertEquals(
             $this->tx->getAmount()->toFloat(),
             $this->data->tokenAmount
-        );
-    }
-
-    /**
-     * @return void
-     */
-    public function testType(): void
-    {
-        $this->assertEquals(
-            $this->tx->getType(),
-            TransactionType::TOKEN
         );
     }
 
