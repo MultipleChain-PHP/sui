@@ -15,7 +15,12 @@ class NftTransaction extends ContractTransaction implements NftTransactionInterf
      */
     public function getReceiver(): string
     {
-        return '0x';
+        $data = $this->getData();
+        if (!$data) {
+            return '';
+        }
+        $ixs = $this->getInputs('pure', 'address');
+        return $ixs ? $ixs[0]->value : '';
     }
 
     /**
@@ -23,7 +28,7 @@ class NftTransaction extends ContractTransaction implements NftTransactionInterf
      */
     public function getSender(): string
     {
-        return '0x';
+        return $this->getSigner();
     }
 
     /**
@@ -31,7 +36,12 @@ class NftTransaction extends ContractTransaction implements NftTransactionInterf
      */
     public function getNftId(): int|string
     {
-        return 0;
+        $data = $this->getData();
+        if (!$data) {
+            return '';
+        }
+        $ixs = $this->getInputs('object', 'immOrOwnedObject');
+        return $ixs ? $ixs[0]->objectId : '';
     }
 
     /**
@@ -42,6 +52,26 @@ class NftTransaction extends ContractTransaction implements NftTransactionInterf
      */
     public function verifyTransfer(AssetDirection $direction, string $address, int|string $nftId): TransactionStatus
     {
-        return TransactionStatus::PENDING;
+        $status = $this->getStatus();
+
+        if (TransactionStatus::PENDING === $status) {
+            return TransactionStatus::PENDING;
+        }
+
+        if ($this->getNftId() !== $nftId) {
+            return TransactionStatus::FAILED;
+        }
+
+        if (AssetDirection::INCOMING === $direction) {
+            if (strtolower($this->getReceiver()) !== strtolower($address)) {
+                return TransactionStatus::FAILED;
+            }
+        } else {
+            if (strtolower($this->getSender()) !== strtolower($address)) {
+                return TransactionStatus::FAILED;
+            }
+        }
+
+        return TransactionStatus::CONFIRMED;
     }
 }

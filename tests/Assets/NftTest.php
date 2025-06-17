@@ -109,6 +109,21 @@ class NftTest extends BaseTest
             strtolower($this->nft->getOwner($this->data->nftTransferId)),
             strtolower($this->data->receiverTestAddress)
         );
+
+        $signer2 = $this->nft->transfer(
+            $this->data->receiverTestAddress,
+            $this->data->senderTestAddress,
+            $this->data->nftTransferId
+        );
+
+        $signer2 = $signer2->sign($this->data->receiverPrivateKey);
+
+        (new Transaction($signer2->send()))->wait();
+
+        $this->assertEquals(
+            strtolower($this->nft->getOwner($this->data->nftTransferId)),
+            strtolower($this->data->senderTestAddress)
+        );
     }
 
     // /**
